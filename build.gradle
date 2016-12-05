@@ -1,0 +1,56 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'distribution'
+
+def groupId = 'com.lingcreative'
+def artifactId = 'gradle-initializer'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+jar {
+    baseName = artifactId
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Initializer',
+                   'Implementation-Version': version,
+                   'Main-Class': 'com.lingcreative.gradle.wrapper.GradleWrapperInitializer',
+                   'Class-Path': './gradle-wrapper.jar'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile files("gradle/wrapper/gradle-wrapper.jar")
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
+distributions {
+    main {
+        baseName = 'gradle-initializer'
+        contents {
+            from('gradle/wrapper/gradle-wrapper.jar') {
+                rename '.*', "initializer/gradle-wrapper.jar"
+            }
+            from(jar.archivePath) {
+                rename '.*', "initializer/${artifactId}.jar"
+            }
+        }
+    }
+}
+
+distTar.dependsOn jar
+distZip.dependsOn jar
