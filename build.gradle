@@ -27,26 +27,31 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 
-test {
-    systemProperties 'property': 'value'
-}
-
-uploadArchives {
-    repositories {
-       flatDir {
-           dirs 'repos'
-       }
-    }
-}
 distributions {
+    def jarCopySpec = project.copySpec {
+        from  { 'gradle/wrapper/gradle-wrapper.jar' }
+        from ( jar.archivePath ) {
+            rename '.*', "${artifactId}.jar"
+        }
+        into 'initializer'
+    }
+    def scriptCopySpec = project.copySpec {
+        from('src/main/dist') {
+            include '*'
+        }
+    }
     main {
         baseName = 'gradle-initializer'
         contents {
-            from('gradle/wrapper/gradle-wrapper.jar') {
-                rename '.*', "initializer/gradle-wrapper.jar"
-            }
-            from(jar.archivePath) {
-                rename '.*', "initializer/${artifactId}.jar"
+            with jarCopySpec
+        }
+    }
+    withGradles {
+        baseName = 'gradle-initializer-with-gradles'
+        contents {
+            with(scriptCopySpec, jarCopySpec)
+            from("${System.getProperty('user.home')}${File.separator}gradle-distributions") {
+                rename '(.*)', 'distributions/$1'
             }
         }
     }
@@ -54,3 +59,5 @@ distributions {
 
 distTar.dependsOn jar
 distZip.dependsOn jar
+withGradlesDistTar.dependsOn jar
+withGradlesDistZip.dependsOn jar
